@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// Point to your backend server. For Docker Compose, 
-// if you're mapping port 8000 on the backend, 
-// then "http://localhost:8000" usually works.
+// Point to your backend server. 
+// If Docker Compose exposes the backend at localhost:8000, then:
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:8000';
 
 export const listContracts = async () => {
@@ -25,7 +24,10 @@ export const getContractDetails = async (id) => {
 };
 
 export const reviewContract = async (id, instructions) => {
-  const res = await axios.post(`${API_BASE}/api/contracts/${id}/review`, { instructions });
+  // POST JSON body with { instructions }
+  const res = await axios.post(`${API_BASE}/api/contracts/${id}/review`, {
+    instructions,
+  });
   return res.data;
 };
 

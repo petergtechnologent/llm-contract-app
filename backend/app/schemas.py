@@ -1,8 +1,8 @@
-# backend/app/schemas.py
-
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+
+# ----- Contract-Related Schemas -----
 
 class ContractBase(BaseModel):
     file_name: Optional[str]
@@ -37,4 +37,11 @@ class ContractDetailResponse(ContractResponse):
     revisions: List[ContractRevisionResponse] = []
 
 class ReviewRequest(BaseModel):
+    """
+    JSON body sent to /api/contracts/{contract_id}/review
+    Example:
+      {
+        "instructions": "Revise the contract to..."
+      }
+    """
     instructions: Optional[str] = None

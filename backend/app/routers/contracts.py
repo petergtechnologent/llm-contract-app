@@ -52,13 +52,15 @@ def get_contract_details(contract_id: int, db: Session = Depends(get_db)):
 @router.post("/contracts/{contract_id}/review", response_model=schemas.ContractRevisionResponse)
 def review_contract(
     contract_id: int,
-    instructions: Optional[str] = None,
+    review_request: schemas.ReviewRequest,  
     db: Session = Depends(get_db)
 ):
     """
     POST /api/contracts/{contract_id}/review
-    Generate a revised contract via OpenAI, save to `contract_revisions`.
+    Generate a revised contract via OpenAI, store in `contract_revisions`.
     """
+    instructions = review_request.instructions or "No additional instructions provided."
+
     contract = db.query(models.Contract).filter(models.Contract.id == contract_id).first()
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found")
@@ -67,35 +69,40 @@ def review_contract(
         raise HTTPException(status_code=500, detail="OpenAI API key not configured")
 
     openai.api_key = OPENAI_API_KEY
-
+    # Build a user prompt for a ChatCompletions call
     prompt = f"""
     ---INSTRUCTIONS---
     Please propose a revised version of a contract for greater clarity. 
     Ensure the revised contract meets legal standards.
 
     Add the following instructions or legal guidelines:
-    {instructions or "No additional instructions provided."}
+    {instructions}
 
     ---CONTRACT TEXT---:
     {contract.original_text}
 
     """
+    # Build messages for a ChatCompletion call
+    messages = [
+        {"role": "system", "content": "You are a helpful legal assistant who specializes in contract editing."},
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ]
     print("DEBUG print var = ", prompt)
     try:
+        print("DEBUG: Passing instructions =", instructions)
         response = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a helpful legal assistant who specializes in contract editing."},
-                {"role": "user", "content": prompt}],
-            max_tokens=10000,
-            temperature=1.0,
+            model="gpt-4o",  
+            messages=messages,
+            max_tokens=4096,
+            temperature=0.8,
         )
         print("DEBUG: Raw OpenAI response:", response)
         revised_text = response.choices[0].message.content
         print("DEBUG: revised_text = ", revised_text)
     except Exception as e:
-        import traceback
-        traceback.print_exc()  # logs the full Python traceback
         raise HTTPException(status_code=500, detail=str(e))
 
     revision = models.ContractRevision(
@@ -137,8 +144,6 @@ def download_contract(
         content = revision.revision_text
         filename = f"{contract.file_name or 'contract'}-revised.txt"
 
-    # Return JSON with the text content; 
-    # your frontend can parse it to create a downloadable file.
     return {
         "file_name": filename,
         "content": content
