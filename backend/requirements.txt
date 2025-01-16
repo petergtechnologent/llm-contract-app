@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+psycopg2-binary
+SQLAlchemy
+python-dotenv
+openai==0.28
+diff-match-patch
+# For file uploads:
+python-multipart
+
+# If you want to allow cross-origin requests from the React dev server:
+fastapi[all]
