@@ -1,0 +1,12 @@
+graph TD
+    subgraph "Frontend"
+        A[React Application]
+        A -->|API Calls| B[FastAPI]
+    end
+    subgraph "Backend"
+        B -->|CRUD Operations| C[PostgreSQL]
+        B -->|Contract Review| D[OpenAI API]
+    end
+    subgraph "Deployment"
+        A & B --> E[Docker Containers]
+    end

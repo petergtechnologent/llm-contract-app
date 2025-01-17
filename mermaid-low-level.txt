@@ -1,0 +1,17 @@
+graph TD
+    subgraph "Frontend (React)"
+        A[Home Page] -->|Link to upload| B[Upload Contract]
+        A -->|Link to details| C[Contract Details]
+        C -->|Download original/revised| D[File Handling]
+        C -->|Request AI revision| E[OpenAI Integration]
+    end
+
+    subgraph "Backend (FastAPI)"
+        B -->|POST /contracts| F[Store in Database]
+        C -->|GET /contracts/:id| F
+        E -->|POST /contracts/:id/review| G[AI Revision via OpenAI]
+        G -->|Save revisions| F
+        D -->|GET /contracts/:id/download| F
+    end
+
+    F -->|Persist data| H[(PostgreSQL)]
